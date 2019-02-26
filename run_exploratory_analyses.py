@@ -73,11 +73,12 @@ def plot_var_by_date_and_SKU(data, cols):
 def plot_correlation_among_features(data, cols):
     data = data.copy()
     data = data[cols]
+
     # Correlation among different features
     corr = data.corr()
     mask = numpy.zeros_like(corr)
     mask[numpy.triu_indices_from(mask)] = True
-    #f = matplotlib.pyplot.figure()
+    f = matplotlib.pyplot.figure()
     seaborn.heatmap(corr,
                     mask=mask,
                     cmap='RdBu',
@@ -89,6 +90,20 @@ def plot_correlation_among_features(data, cols):
                     xticklabels=True,
                     yticklabels=True)
     matplotlib.pyplot.tight_layout()
+
+
+def plot_paired_grid(data, grouping_var, cols):
+    data = data.copy()
+    data.set_index(grouping_var, inplace=True)
+    data = data[cols]
+
+    g = seaborn.PairGrid(data.reset_index(),
+                         hue=grouping_var,
+                         palette='Set1')
+    g = g.map_diag(matplotlib.pyplot.hist)
+    g = g.map_lower(matplotlib.pyplot.scatter, edgecolor="w", s=20)
+    g = g.map_upper(seaborn.kdeplot, cmap='Blues')
+    g = g.add_legend()
 
 
 if __name__ == '__main__':
@@ -132,4 +147,14 @@ if __name__ == '__main__':
     plot_var_by_date_and_SKU(data, ['Passed_QC_Count'])
     plot_var_by_date_and_SKU(data, ['Passed_QC_Count', 'Defect_1_Count', 'Defect_2_Count', 'Defect_3_Count',
                                     'Defect_4_Count'])
+
+    # Influence of time taken to manufacture the product. Do products made quickly have more defects?
+    seaborn.violinplot(x='SKU', y='Total_Dur', data=data)
+    plot_paired_grid(data, 'Result_Type_Bin', ['Zone1_Dur', 'Zone2_Dur', 'Zone3_Dur'])
+    plot_paired_grid(data, 'Result_Type', ['Zone1_Dur', 'Zone2_Dur', 'Zone3_Dur'])
+    plot_correlation_among_features(data, ['Result_Type_Bin', 'Zone1_Dur', 'Zone2_Dur', 'Zone3_Dur', 'Zone1_Out_Zone2_In_Dur',
+                                           'Zone1_Out_Zone3_In_Dur', 'Zone2_Out_Zone3_In_Dur',
+                                           'Zone1_In_Zone3_Out_Dur', 'Zone1_In_Zone2_Out_Dur', 'Zone2_In_Zone3_Out_Dur', 'Total_Dur',
+                                           'Total_Zone123_Dur', 'AVG_Zone123_Dur'])
+
 
