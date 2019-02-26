@@ -1,6 +1,7 @@
 import os
 
 import matplotlib.pyplot
+import statsmodels.graphics.mosaicplot
 import numpy
 import pandas
 import seaborn
@@ -106,9 +107,16 @@ def plot_paired_grid(data, grouping_var, cols):
     g = g.add_legend()
 
 
+def plot_cat_data_association(data, cols):
+    statsmodels.graphics.mosaicplot.mosaic(data, cols)
+
+
 if __name__ == '__main__':
     data = read_data()
     print('Dataset with {} rows and {} columns'.format(data.shape[0], data.shape[1]))
+
+    # Drop un-informative columns
+    data.drop(columns=['Block_Orientation'], inplace=True) # Same value in column
 
     # Drop entries with missing data
     # TODO: Revisit after coming up with a strategy to deal with missing data
@@ -118,18 +126,29 @@ if __name__ == '__main__':
     # Exploratory plots
     matplotlib.pyplot.close('all')
 
+    # Association between SKU and categorical variables
+    plot_cat_data_association(data, ['SKU', 'Result_Type_Bin'])
+    plot_cat_data_association(data, ['SKU', 'Result_Type'])
+    plot_cat_data_association(data, ['SKU', 'Week_Day'])
+    plot_cat_data_association(data, ['SKU', 'Is_Weekend'])
+    plot_cat_data_association(data, ['SKU', 'Block_Num'])
+    plot_cat_data_association(data, ['SKU', 'Block_Position'])
+
+
+    # Correlation among numerical variables
+    plot_correlation_among_features(data, data.columns)
+
+
     # Influence of temperature on defects
     plot_correlation_among_features(data, ['Zone1_Temp_Min', 'Zone2_Temp_Min', 'Zone3_Temp_Min',
                                            'Zone1_Temp_Max', 'Zone2_Temp_Max', 'Zone3_Temp_Max',
                                            'Zone1_Temp_Range', 'Zone2_Temp_Range', 'Zone3_Temp_Range',
                                            'Zone1_Temp_Avg', 'Zone2_Temp_Avg', 'Zone3_Temp_Avg'])
 
-
     plot_var_by_SKU_and_result_type(data, ['Zone1_Temp_Min', 'Zone2_Temp_Min', 'Zone3_Temp_Min'])
     plot_var_by_SKU_and_result_type(data, ['Zone1_Temp_Max', 'Zone2_Temp_Max', 'Zone3_Temp_Max'])
     plot_var_by_SKU_and_result_type(data, ['Zone1_Temp_Avg', 'Zone2_Temp_Avg', 'Zone3_Temp_Avg'])
     plot_var_by_SKU_and_result_type(data, ['Zone1_Temp_Range', 'Zone2_Temp_Range', 'Zone3_Temp_Range'])
-
 
 
     # Influence of humidity on defects
@@ -148,6 +167,7 @@ if __name__ == '__main__':
     plot_var_by_date_and_SKU(data, ['Passed_QC_Count', 'Defect_1_Count', 'Defect_2_Count', 'Defect_3_Count',
                                     'Defect_4_Count'])
 
+
     # Influence of time taken to manufacture the product. Do products made quickly have more defects?
     seaborn.violinplot(x='SKU', y='Total_Dur', data=data)
     plot_paired_grid(data, 'Result_Type_Bin', ['Zone1_Dur', 'Zone2_Dur', 'Zone3_Dur'])
@@ -156,5 +176,3 @@ if __name__ == '__main__':
                                            'Zone1_Out_Zone3_In_Dur', 'Zone2_Out_Zone3_In_Dur',
                                            'Zone1_In_Zone3_Out_Dur', 'Zone1_In_Zone2_Out_Dur', 'Zone2_In_Zone3_Out_Dur', 'Total_Dur',
                                            'Total_Zone123_Dur', 'AVG_Zone123_Dur'])
-
-
