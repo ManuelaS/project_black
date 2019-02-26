@@ -1,6 +1,9 @@
 import os
-import pandas
 
+import matplotlib.pyplot
+import numpy
+import pandas
+import seaborn
 
 pandas.set_option('display.max_columns', 10)
 pandas.set_option('display.width', 300)
@@ -34,6 +37,60 @@ def read_data():
     return data
 
 
+def plot_var_by_SKU_and_result_type(data, cols):
+    data = data.copy()
+    data.set_index(['SKU', 'Result_Type'], inplace=True)
+    data = data[cols].stack().to_frame('value')
+    data.index.names = ['SKU', 'Result_Type', 'vars']
+
+    seaborn.catplot(x='SKU', y='value',
+                    kind='violin',
+                    hue='Result_Type',
+                    row='vars',
+                    dodge=True,
+                    palette='Set1',
+                    data=data.reset_index())
+
+
+def plot_var_by_date_and_SKU(data, cols):
+    data = data.copy()
+    data.set_index(['Date', 'SKU', 'Result_Type'], inplace=True)
+    data = data[cols].stack().to_frame('value')
+    data.index.names = ['Date', 'SKU', 'Result_Type', 'vars']
+
+    g = seaborn.relplot(x='Date', y='value',
+                        err_style="bars",
+                        row='SKU',
+                        col='vars',
+                        hue='SKU',
+                        kind='line',
+                        palette='Set1',
+                        data=data.reset_index())
+    g.set_xticklabels(rotation=90)
+    matplotlib.pyplot.tight_layout()
+
+
+def plot_correlation_among_features(data, cols):
+    data = data.copy()
+    data = data[cols]
+    # Correlation among different features
+    corr = data.corr()
+    mask = numpy.zeros_like(corr)
+    mask[numpy.triu_indices_from(mask)] = True
+    #f = matplotlib.pyplot.figure()
+    seaborn.heatmap(corr,
+                    mask=mask,
+                    cmap='RdBu',
+                    vmin=-1,
+                    vmax=1,
+                    linewidths=1,
+                    linecolor='w',
+                    square=True,
+                    xticklabels=True,
+                    yticklabels=True)
+    matplotlib.pyplot.tight_layout()
+
+
 if __name__ == '__main__':
     data = read_data()
     print('Dataset with {} rows and {} columns'.format(data.shape[0], data.shape[1]))
@@ -42,3 +99,37 @@ if __name__ == '__main__':
     # TODO: Revisit after coming up with a strategy to deal with missing data
     data = data.dropna()
     print('After removing missing data, dataset with {} rows and {} columns'.format(data.shape[0], data.shape[1]))
+
+    # Exploratory plots
+    matplotlib.pyplot.close('all')
+
+    # Influence of temperature on defects
+    plot_correlation_among_features(data, ['Zone1_Temp_Min', 'Zone2_Temp_Min', 'Zone3_Temp_Min',
+                                           'Zone1_Temp_Max', 'Zone2_Temp_Max', 'Zone3_Temp_Max',
+                                           'Zone1_Temp_Range', 'Zone2_Temp_Range', 'Zone3_Temp_Range',
+                                           'Zone1_Temp_Avg', 'Zone2_Temp_Avg', 'Zone3_Temp_Avg'])
+
+
+    plot_var_by_SKU_and_result_type(data, ['Zone1_Temp_Min', 'Zone2_Temp_Min', 'Zone3_Temp_Min'])
+    plot_var_by_SKU_and_result_type(data, ['Zone1_Temp_Max', 'Zone2_Temp_Max', 'Zone3_Temp_Max'])
+    plot_var_by_SKU_and_result_type(data, ['Zone1_Temp_Avg', 'Zone2_Temp_Avg', 'Zone3_Temp_Avg'])
+    plot_var_by_SKU_and_result_type(data, ['Zone1_Temp_Range', 'Zone2_Temp_Range', 'Zone3_Temp_Range'])
+
+
+
+    # Influence of humidity on defects
+    plot_correlation_among_features(data, ['Zone1_Humidity_Min', 'Zone2_Humidity_Min', 'Zone3_Humidity_Min',
+                                           'Zone1_Humidity_Max', 'Zone2_Humidity_Max', 'Zone3_Humidity_Max',
+                                           'Zone1_Humidity_Range', 'Zone2_Humidity_Range', 'Zone3_Humidity_Range',
+                                           'Zone1_Humidity_Avg', 'Zone2_Humidity_Avg', 'Zone3_Humidity_Avg'])
+    plot_var_by_SKU_and_result_type(data, ['Zone1_Humidity_Min', 'Zone2_Humidity_Min', 'Zone3_Humidity_Min'])
+    plot_var_by_SKU_and_result_type(data, ['Zone1_Humidity_Max', 'Zone2_Humidity_Max', 'Zone3_Humidity_Max'])
+    plot_var_by_SKU_and_result_type(data, ['Zone1_Humidity_Avg', 'Zone2_Humidity_Avg', 'Zone3_Humidity_Avg'])
+    plot_var_by_SKU_and_result_type(data, ['Zone1_Humidity_Range', 'Zone2_Humidity_Range', 'Zone3_Humidity_Range'])
+
+
+    # Influence of date on defects broken down by SKU
+    plot_var_by_date_and_SKU(data, ['Passed_QC_Count'])
+    plot_var_by_date_and_SKU(data, ['Passed_QC_Count', 'Defect_1_Count', 'Defect_2_Count', 'Defect_3_Count',
+                                    'Defect_4_Count'])
+
