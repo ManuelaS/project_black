@@ -70,30 +70,11 @@ def impute_data_zone1(data):
     data.loc[(data.Zone1_Row_Num == 2) & (data.Zone1_Col_Num == 3), 'Zone1Position'] = 7
     data.loc[(data.Zone1_Row_Num == 2) & (data.Zone1_Col_Num == 4), 'Zone1Position'] = 8
 
-    # Now that 'Zone1Position' is set, use this info to impute values in remaining columns
-    data.loc[data.Zone1Position.isin([1, 2, 3, 4]), 'Zone1_Row_Num'] = 1
-    data.loc[data.Zone1Position.isin([5, 6, 7, 8]), 'Zone1_Row_Num'] = 2
-
-    data.loc[data.Zone1Position.isin([1, 5]), 'Zone1_Col_Num'] = 1
-    data.loc[data.Zone1Position.isin([2, 6]), 'Zone1_Col_Num'] = 2
-    data.loc[data.Zone1Position.isin([3, 7]), 'Zone1_Col_Num'] = 3
-    data.loc[data.Zone1Position.isin([4, 8]), 'Zone1_Col_Num'] = 4
-
-    data.loc[data.Zone1Position.isin([1, 2, 5, 6]), 'Zone1_Left_Block_Bin'] = 1
-    data.loc[data.Zone1Position.isin([3, 4, 7, 8]), 'Zone1_Left_Block_Bin'] = 0
-
-    data.loc[data.Zone1Position.isin([3, 4, 7, 8]), 'Zone1_Right_Block_Bin'] = 1
-    data.loc[data.Zone1Position.isin([1, 2, 5, 6]), 'Zone1_Right_Block_Bin'] = 0
-
-    data.loc[data.Zone1Position.isin([1, 2]), 'Zone1_Area'] = 'Top Left'
-    data.loc[data.Zone1Position.isin([3, 4]), 'Zone1_Area'] = 'Top Right'
-    data.loc[data.Zone1Position.isin([5, 6]), 'Zone1_Area'] = 'Bottom Left'
-    data.loc[data.Zone1Position.isin([7, 8]), 'Zone1_Area'] = 'Bottom Right'
+    data.drop(columns=set(zone1_pos).difference(['Zone1Position']), inplace=True)
 
     # Investigate remaining patterns of missing data:
     print('After imputation {:.2f}% fraction of samples have missing positional information for Zone1'.format(
-        100 * data[zone1_pos].isna().any(axis=1).mean()))
-    print(data[zone1_pos].isna().groupby(zone1_pos).size())
+        100 * data['Zone1Position'].isna().mean()))
 
 
 def plot_var_by_SKU_and_result_type(data, cols):
