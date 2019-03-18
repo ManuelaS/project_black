@@ -1,3 +1,5 @@
+import os
+
 import matplotlib.pyplot
 import numpy
 import pandas
@@ -80,23 +82,53 @@ def plot_paired_grid(data, grouping_var, cols):
     g = g.add_legend()
 
 
-def plot_cat_data_association(data, cols):
-    statsmodels.graphics.mosaicplot.mosaic(data, cols)
+def plot_cat_data_association(data, cols, name):
+    statsmodels.graphics.mosaicplot.mosaic(data.groupby(cols).size())
+    matplotlib.pyplot.savefig(os.path.join('figures', name+'.png'))
+
+
+def plot_cost_defect_association(data, costs):
+    statsmodels.graphics.mosaicplot.mosaic(data.join(costs, on='SKU').groupby(['SKU', 'Result_Type']).Value.sum())
+    matplotlib.pyplot.savefig(os.path.join('figures', 'SKU_vs_Result_Type_costs.png'))
+
+
+def plot_zone_position_defect(data):
+    fig, ax = matplotlib.pyplot.subplots(1, 3)
+    data.groupby(['Zone1Position', 'Result_Type']).size().unstack().plot(kind='bar', stacked=True, ax=ax[0])
+    data.groupby(['Zone2Position', 'Result_Type']).size().unstack().plot(kind='bar', stacked=True, ax=ax[1])
+    data.groupby(['Zone3Position', 'Result_Type']).size().unstack().plot(kind='bar', stacked=True, ax=ax[2])
+    matplotlib.pyplot.savefig(os.path.join('figures', 'defects_by_position.png'))
+
+
+def plot_opportunities(data, costs):
+    data2 = data.join(costs, on='SKU')
+    data2 = data2[data2.Result_Type != 'PASS']
+    data2.SKU.replace(['B003', 'C005', 'X007', 'Z009'], 'NotA001', inplace=True)
+    opportunities = data2.groupby(['SKU', 'Result_Type']).Value.sum().sort_values(ascending=False) / 1e6
+    opportunities.plot(kind='bar', width=0.9)
+    matplotlib.pyplot.ylabel('Potential savings [Mill Euro]')
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig(os.path.join('figures', 'opportunities.png'))
 
 
 if __name__ == '__main__':
     data = prepare_data.get_prepared_data()
+    costs = prepare_data.get_costs()
 
     # Exploratory plots
     matplotlib.pyplot.close('all')
+    os.makedirs('figures', exist_ok=True)
 
     # Association between SKU and categorical variables
-    plot_cat_data_association(data, ['SKU', 'Result_Type_Bin'])
-    plot_cat_data_association(data, ['SKU', 'Result_Type'])
-    plot_cat_data_association(data, ['SKU', 'Week_Day'])
-    plot_cat_data_association(data, ['SKU', 'Is_Weekend'])
-    plot_cat_data_association(data, ['SKU', 'Block_Num'])
-    plot_cat_data_association(data, ['SKU', 'Block_Position'])
+    plot_cat_data_association(data, ['SKU', 'Result_Type_Bin'], 'SKU_vs_Result_Type_Bin')
+    plot_cat_data_association(data, ['SKU', 'Result_Type'], 'SKU_vs_Result_Type')
+    plot_cat_data_association(data, ['SKU', 'Week_Day'], 'SKU_vs_Week_Day')
+    plot_cat_data_association(data, ['SKU', 'Is_Weekend'], 'SKU_vs_Is_Weekend')
+    plot_cat_data_association(data, ['SKU', 'Block_Num'], 'SKU_vs_Block_Num')
+    plot_cat_data_association(data, ['SKU', 'Block_Position'], 'SKU_vs_Block_Position')
+    plot_cost_defect_association(data, costs)
+    plot_opportunities(data, costs)
+    plot_zone_position_defect(data)
 
 
     # Correlation among numerical variables
