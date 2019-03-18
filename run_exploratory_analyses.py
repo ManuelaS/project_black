@@ -105,6 +105,7 @@ def plot_opportunities(data, costs):
     data2 = data2[data2.Result_Type != 'PASS']
     data2.SKU.replace(['B003', 'C005', 'X007', 'Z009'], 'NotA001', inplace=True)
     opportunities = data2.groupby(['SKU', 'Result_Type']).Value.sum().sort_values(ascending=False) / 1e6
+    matplotlib.pyplot.figure()
     opportunities.plot(kind='bar', width=0.9)
     matplotlib.pyplot.ylabel('Potential savings [Mill Euro]')
     matplotlib.pyplot.tight_layout()
