@@ -14,8 +14,8 @@ def read_data():
          - Week_Day: categorical (day of the week)
          - Is_Weekend: "binary (1 for weekend and 0 for weekday)."""
 
-    data = pandas.read_csv(os.path.join('data', 'WIDS_Project_Generated_Data_10K.csv'), index_col=0)
-    # data = pandas.read_csv(os.path.join('data', 'WIDS_Dataset_Full_Aug18_Jan19_Adjusted.csv'), index_col=0)
+    # data = pandas.read_csv(os.path.join('data', 'WIDS_Project_Generated_Data_10K.csv'), index_col=0)
+    data = pandas.read_csv(os.path.join('data', 'WIDS_Dataset_Full_Aug18_Jan19_Adjusted.csv'), index_col=0)
     data.index.name = 'row_id'
 
     # Add binary Result_Type_Bin variable
@@ -134,6 +134,19 @@ def get_prepared_data():
     data.drop(columns=['Block_Orientation'], inplace=True)  # Same value in column
 
     return data
+
+
+def balance_dataset(data, varname):
+    # Create a balanced dataset, balanced on a categorical variable.
+    # Sub-samples data for each category down to the number of occurrences of the least common category.
+    per_cat_n = data[varname].value_counts().min()
+    return pandas.concat([
+        sub_data.sample(per_cat_n) for _, sub_data in data.groupby(varname)
+    ])
+
+
+def get_costs():
+    return pandas.read_excel(os.path.join('data', 'Costs.xlsx'), skiprows=1, usecols=['SKU', 'Value'], index_col='SKU')
 
 
 if __name__ == '__main__':
