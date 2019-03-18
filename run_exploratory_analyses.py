@@ -5,6 +5,8 @@ import numpy
 import pandas
 import seaborn
 import statsmodels.graphics.mosaicplot
+import sklearn.tree
+import graphviz
 
 import prepare_data
 
@@ -112,6 +114,33 @@ def plot_opportunities(data, costs):
     matplotlib.pyplot.savefig(os.path.join('figures', 'opportunities.png'))
 
 
+def analyze_opportunity1(data):
+    # Analyze root cause of opportunity 1 defects (Defect_2 in NonA001 SKUs)
+    data2 = data[(data.SKU != 'A001') & data.Result_Type.isin(['PASS', 'Defect_2'])].dropna()
+    x = data2.drop(columns=['Result_Type_Bin', 'Result_Type', 'Date', 'SKU', 'Week_Day'])
+    tree = sklearn.tree.DecisionTreeClassifier(min_samples_split=1000, min_samples_leaf=100,
+                                               min_impurity_split=0.1).fit(x, data2.Result_Type)
+    graph = sklearn.tree.export_graphviz(tree, feature_names=x.columns, class_names=tree.classes_, filled=True,
+                                         rounded=True, proportion=True)
+    graphviz.Source(graph).render(os.path.join('figures', 'opportunity1_tree'), format='png')
+
+
+def plot_opportunity1_partial_dependency_plot(data):
+    data2 = data[(data.Zone3Position == 6) & (data.SKU != 'A001') & data.Result_Type.isin(['PASS', 'Defect_2'])].copy()
+
+    data2['HasDefect'] = data2.Result_Type != 'PASS'
+
+    data3 = data2.groupby([pandas.cut(data2.Zone1_Temp_Min, range(11, 26), precision=0),
+                           pandas.cut(data2.Zone1_Temp_Max, range(20, 36), precision=0)]). \
+        HasDefect.mean().unstack()
+    data3.sort_index(axis=1, inplace=True)
+
+    matplotlib.pyplot.figure()
+    seaborn.heatmap(data3, cmap='RdYlBu_r', cbar_kws={'label': 'Defect 2 incidence rate'})
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity1_partial_dependency.png'))
+
+
 if __name__ == '__main__':
     data = prepare_data.get_prepared_data()
     costs = prepare_data.get_costs()
@@ -129,7 +158,10 @@ if __name__ == '__main__':
     plot_cat_data_association(data, ['SKU', 'Block_Position'], 'SKU_vs_Block_Position')
     plot_cost_defect_association(data, costs)
     plot_opportunities(data, costs)
+
+    analyze_opportunity1(data)
     plot_zone_position_defect(data)
+    plot_opportunity1_partial_dependency_plot(data)
 
 
     # Correlation among numerical variables
