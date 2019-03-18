@@ -58,6 +58,7 @@ Similarly, Defect 3 appears to affect mostly products produced in position 1 of 
 - use classification random forest for modelling
 - balanced accuracy = 0.69 (vs. 0.2 expected by chance)
 - detailed classification report:
+```
 
                 f1-score    precision    recall    support
 ------------  ----------  -----------  --------  ---------
@@ -69,6 +70,7 @@ PASS            0.441852     0.417642  0.469042       5249
 micro avg       0.691713     0.691713  0.691713      26245
 macro avg       0.698545     0.70823   0.691713      26245
 weighted avg    0.698545     0.70823   0.691713      26245
+```
 
 - confusion matrix:
 
