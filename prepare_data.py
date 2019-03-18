@@ -15,7 +15,7 @@ def read_data():
          - Is_Weekend: "binary (1 for weekend and 0 for weekday)."""
 
     # data = pandas.read_csv(os.path.join('data', 'WIDS_Project_Generated_Data_10K.csv'), index_col=0)
-    data = pandas.read_csv(os.path.join('data', 'WIDS_Dataset_Full_Aug18_Jan19_Adjusted.csv'), index_col=0)
+    data = pandas.read_csv(os.path.join('data', 'WIDS_Dataset_Full_Aug18_Jan19_Adjusted.csv.gz'), index_col=0)
     data.index.name = 'row_id'
 
     # Add binary Result_Type_Bin variable
