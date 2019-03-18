@@ -118,6 +118,21 @@ def impute_data_zone3(data):
         100 * data.Zone3Position.notna().mean()))
 
 
+def impute_data_duration(data):
+    # Drop AVG_Zone123_Dur as it is redundant with Total_Zone123_Dur and the 2 columns are filled in the same cases
+    assert ((data.Total_Zone123_Dur.isna() == data.AVG_Zone123_Dur.isna()).all())
+    data.drop(columns=['AVG_Zone123_Dur'], inplace=True)
+
+    # Columns related to duration
+    dur_cols = ['Zone1_Dur', 'Zone2_Dur', 'Zone3_Dur',
+                'Zone1_Out_Zone2_In_Dur', 'Zone1_Out_Zone3_In_Dur', 'Zone2_Out_Zone3_In_Dur',
+                'Zone1_In_Zone3_Out_Dur', 'Zone1_In_Zone2_Out_Dur', 'Zone2_In_Zone3_Out_Dur',
+                'Total_Dur', 'Total_Zone123_Dur']
+
+    # Investigate patterns of available data:
+    # print(data[dur_cols].notna().groupby(dur_cols).size())
+
+
 def get_prepared_data():
     data = read_data()
 
@@ -125,6 +140,7 @@ def get_prepared_data():
     impute_data_zone1(data)
     impute_data_zone2(data)
     impute_data_zone3(data)
+    impute_data_duration(data)
 
     # # Drop entries with missing data
     # # TODO: Revisit after coming up with a strategy to deal with missing data
