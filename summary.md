@@ -39,6 +39,7 @@ Defect 2 for non-A001 SKUs appear over-represented in products produced:
 - In Zone3Position 6
 - with high Zone1TempRange (>8.96)
 - (depending on Zone1 temperature and humidity)
+- Why the strange interaction between position in zone3 and temperatures in zone1??
 
 # Partial dependency plot for Zone 1 min/max temperatures for non-A001 SKUs in Zone 3 position 6
 
@@ -46,6 +47,24 @@ Defect 2 for non-A001 SKUs appear over-represented in products produced:
 
 Practically all of Defect 2 for non-A001 SKUs can be explained by min/max temperatures in Zone1
 for items produced in zone 3 position 6.
+
+# Opportunity 3, Defect_3 across non-A001 SKUs
+![opportunity3_tree.png](figures/opportunity3_tree.png)
+
+Defect 3 for non-A001 SKUs appear over-represented in products produced:
+- In Zone2Position 1
+- with a narrow band of Zone1_In_Zone3_Out_Dur between 99.505 and 99.975 seconds
+- In Block_Position 1 or 4
+- How is Block Position related to ZoneXPosition??
+- From the data dictionary, it appears that
+  Zone1_In_Zone3_Out_Dur == Total_Dur == Total_Zone123_Dur + Zone1_Out_Zone2_In_Dur + Zone2_Out_Zone3_In_Dur, but it's not??
+
+# Partial dependency plot for Zone1_In_Zone3_Out_Dur for non-A001 SKUs in Zone 2 position 1
+
+![opportunity3_partial_dependency.png](figures/opportunity3_partial_dependency.png)
+
+Practically all of Defect 3 for non-A001 SKUs can be explained by Zone1_In_Zone3_Out_Dur, Block_Position and Zone 2 position1.
+
 
 # Breakdown of defects occurrence by zone 1-3 positions
 

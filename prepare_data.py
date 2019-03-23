@@ -3,19 +3,32 @@ import os
 import pandas
 
 pandas.set_option('display.max_columns', 10)
-pandas.set_option('display.width', 300)
+pandas.set_option('display.width', 150)
 
 
 def read_data():
     """Read in dataset and return a dataframe with:
        - index: row_id
        - columns: original and derived features. Derived features include:
-         - Result_Type_Bin: binary feature (PASS or DEFECT)
-         - Week_Day: categorical (day of the week)
-         - Is_Weekend: "binary (1 for weekend and 0 for weekday)."""
+         - Result_Type_Bin: categorical feature (PASS or DEFECT)."""
 
     # data = pandas.read_csv(os.path.join('data', 'WIDS_Project_Generated_Data_10K.csv'), index_col=0)
-    data = pandas.read_csv(os.path.join('data', 'WIDS_Dataset_Full_Aug18_Jan19_Adjusted.csv.gz'), index_col=0)
+    data = pandas.read_csv(os.path.join('data', 'WIDS_Dataset_Full_Aug18_Jan19_Adjusted.csv.gz'),
+                           index_col=0,
+                           dtype={
+                               'Zone1Position': 'category',
+                               'Zone2Position': 'category',
+                               'Zone3Position': 'category',
+                               'SKU': 'category',
+                               'Block_Num': 'category',
+                               'Block_Position': 'category',
+                               'Result_Type': 'category',
+                               'Passed_QC_Count': 'Int64',
+                               'Defect_1_Count': 'Int64',
+                               'Defect_2_Count': 'Int64',
+                               'Defect_3_Count': 'Int64',
+                               'Defect_4_Count': 'Int64',
+                           })
     data.index.name = 'row_id'
 
     # Add binary Result_Type_Bin variable
@@ -24,13 +37,7 @@ def read_data():
         'Defect_1': 'DEFECT',
         'Defect_2': 'DEFECT',
         'Defect_3': 'DEFECT',
-        'Defect_4': 'DEFECT'})
-
-    # Add annotation by day of the week/weekend to explore whether there is an associations with defects appearance
-    data['Week_Day'] = pandas.Categorical(
-        pandas.to_datetime(data.Date).dt.day_name(),
-        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
-    data['Is_Weekend'] = (pandas.to_datetime(data.Date).dt.dayofweek // 5 == 1).astype(float)
+        'Defect_4': 'DEFECT'}).astype('category')
 
     return data
 
@@ -50,14 +57,14 @@ def impute_data_zone1(data):
     data.loc[data.Zone1_Area.isin(['Bottom Right', 'Bottom Left']), 'Zone1_Row_Num'] = 2
 
     # Input values in 'Zone1Position' based on row and col position
-    data.loc[(data.Zone1_Row_Num == 1) & (data.Zone1_Col_Num == 1), 'Zone1Position'] = 1
-    data.loc[(data.Zone1_Row_Num == 1) & (data.Zone1_Col_Num == 2), 'Zone1Position'] = 2
-    data.loc[(data.Zone1_Row_Num == 1) & (data.Zone1_Col_Num == 3), 'Zone1Position'] = 3
-    data.loc[(data.Zone1_Row_Num == 1) & (data.Zone1_Col_Num == 4), 'Zone1Position'] = 4
-    data.loc[(data.Zone1_Row_Num == 2) & (data.Zone1_Col_Num == 1), 'Zone1Position'] = 5
-    data.loc[(data.Zone1_Row_Num == 2) & (data.Zone1_Col_Num == 2), 'Zone1Position'] = 6
-    data.loc[(data.Zone1_Row_Num == 2) & (data.Zone1_Col_Num == 3), 'Zone1Position'] = 7
-    data.loc[(data.Zone1_Row_Num == 2) & (data.Zone1_Col_Num == 4), 'Zone1Position'] = 8
+    data.loc[(data.Zone1_Row_Num == 1) & (data.Zone1_Col_Num == 1), 'Zone1Position'] = '1'
+    data.loc[(data.Zone1_Row_Num == 1) & (data.Zone1_Col_Num == 2), 'Zone1Position'] = '2'
+    data.loc[(data.Zone1_Row_Num == 1) & (data.Zone1_Col_Num == 3), 'Zone1Position'] = '3'
+    data.loc[(data.Zone1_Row_Num == 1) & (data.Zone1_Col_Num == 4), 'Zone1Position'] = '4'
+    data.loc[(data.Zone1_Row_Num == 2) & (data.Zone1_Col_Num == 1), 'Zone1Position'] = '5'
+    data.loc[(data.Zone1_Row_Num == 2) & (data.Zone1_Col_Num == 2), 'Zone1Position'] = '6'
+    data.loc[(data.Zone1_Row_Num == 2) & (data.Zone1_Col_Num == 3), 'Zone1Position'] = '7'
+    data.loc[(data.Zone1_Row_Num == 2) & (data.Zone1_Col_Num == 4), 'Zone1Position'] = '8'
 
     data.drop(columns=set(zone1_pos).difference(['Zone1Position']), inplace=True)
 
@@ -77,10 +84,10 @@ def impute_data_zone2(data):
         100 * data.Zone2Position.notna().mean()))
 
     # Input values in 'Zone2Position' based on row and col position
-    data.loc[(data.Zone2_Row_Num == 1) & (data.Zone2_Col_num == 1), 'Zone2Position'] = 1
-    data.loc[(data.Zone2_Row_Num == 1) & (data.Zone2_Col_num == 2), 'Zone2Position'] = 2
-    data.loc[(data.Zone2_Row_Num == 2) & (data.Zone2_Col_num == 1), 'Zone2Position'] = 3
-    data.loc[(data.Zone2_Row_Num == 2) & (data.Zone2_Col_num == 2), 'Zone2Position'] = 4
+    data.loc[(data.Zone2_Row_Num == 1) & (data.Zone2_Col_num == 1), 'Zone2Position'] = '1'
+    data.loc[(data.Zone2_Row_Num == 1) & (data.Zone2_Col_num == 2), 'Zone2Position'] = '2'
+    data.loc[(data.Zone2_Row_Num == 2) & (data.Zone2_Col_num == 1), 'Zone2Position'] = '3'
+    data.loc[(data.Zone2_Row_Num == 2) & (data.Zone2_Col_num == 2), 'Zone2Position'] = '4'
 
     data.drop(columns=set(zone2_pos).difference(['Zone2Position']), inplace=True)
 
@@ -99,18 +106,18 @@ def impute_data_zone3(data):
         100 * data.Zone3Position.notna().mean()))
 
     # Set Position based on Zone3_Area and Row/Column where we can.
-    data.loc[(data.Zone3_Area == 'Top Left') & (data.Zone3_Col_Num == 2), 'Zone3Position'] = 2
-    data.loc[(data.Zone3_Area == 'Top Left') & (data.Zone3_Row_Num == 2), 'Zone3Position'] = 4
-    data.loc[(data.Zone3_Area == 'Bottom Right') & (data.Zone3_Row_Num == 1), 'Zone3Position'] = 3
-    data.loc[(data.Zone3_Area == 'Bottom Right') & (data.Zone3_Col_Num == 2), 'Zone3Position'] = 5
+    data.loc[(data.Zone3_Area == 'Top Left') & (data.Zone3_Col_Num == 2), 'Zone3Position'] = '2'
+    data.loc[(data.Zone3_Area == 'Top Left') & (data.Zone3_Row_Num == 2), 'Zone3Position'] = '4'
+    data.loc[(data.Zone3_Area == 'Bottom Right') & (data.Zone3_Row_Num == 1), 'Zone3Position'] = '3'
+    data.loc[(data.Zone3_Area == 'Bottom Right') & (data.Zone3_Col_Num == 2), 'Zone3Position'] = '5'
 
     # Input values in 'Zone2Position' based on row and col position
-    data.loc[(data.Zone3_Row_Num == 1) & (data.Zone3_Col_Num == 1), 'Zone3Position'] = 1
-    data.loc[(data.Zone3_Row_Num == 1) & (data.Zone3_Col_Num == 2), 'Zone3Position'] = 2
-    data.loc[(data.Zone3_Row_Num == 1) & (data.Zone3_Col_Num == 3), 'Zone3Position'] = 3
-    data.loc[(data.Zone3_Row_Num == 2) & (data.Zone3_Col_Num == 1), 'Zone3Position'] = 4
-    data.loc[(data.Zone3_Row_Num == 2) & (data.Zone3_Col_Num == 2), 'Zone3Position'] = 5
-    data.loc[(data.Zone3_Row_Num == 2) & (data.Zone3_Col_Num == 3), 'Zone3Position'] = 6
+    data.loc[(data.Zone3_Row_Num == 1) & (data.Zone3_Col_Num == 1), 'Zone3Position'] = '1'
+    data.loc[(data.Zone3_Row_Num == 1) & (data.Zone3_Col_Num == 2), 'Zone3Position'] = '2'
+    data.loc[(data.Zone3_Row_Num == 1) & (data.Zone3_Col_Num == 3), 'Zone3Position'] = '3'
+    data.loc[(data.Zone3_Row_Num == 2) & (data.Zone3_Col_Num == 1), 'Zone3Position'] = '4'
+    data.loc[(data.Zone3_Row_Num == 2) & (data.Zone3_Col_Num == 2), 'Zone3Position'] = '5'
+    data.loc[(data.Zone3_Row_Num == 2) & (data.Zone3_Col_Num == 3), 'Zone3Position'] = '6'
 
     data.drop(columns=set(zone3_pos).difference(['Zone3Position']), inplace=True)
 

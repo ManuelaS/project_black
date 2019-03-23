@@ -11,14 +11,15 @@ import graphviz
 import prepare_data
 
 pandas.set_option('display.max_columns', 10)
-pandas.set_option('display.width', 300)
+pandas.set_option('display.width', 150)
 
 
 def plot_var_by_SKU_and_result_type(data, cols):
-    data = data.copy()
-    data.set_index(['SKU', 'Result_Type'], inplace=True)
-    data = data[cols].stack().to_frame('value')
-    data.index.names = ['SKU', 'Result_Type', 'vars']
+    data2 = data.copy()
+    data2.SKU = data2.SKU.astype('object')
+    data2.set_index(['SKU', 'Result_Type'], inplace=True)
+    data2 = data2[cols].stack().to_frame('value')
+    data2.index.names = ['SKU', 'Result_Type', 'vars']
 
     seaborn.catplot(x='SKU', y='value',
                     kind='violin',
@@ -26,11 +27,12 @@ def plot_var_by_SKU_and_result_type(data, cols):
                     row='vars',
                     dodge=True,
                     palette='Set1',
-                    data=data.reset_index())
+                    data=data2.reset_index())
 
 
 def plot_var_by_date_and_SKU(data, cols):
     data = data.copy()
+    data.SKU = data.SKU.astype('object')
     data.set_index(['Date', 'SKU', 'Result_Type'], inplace=True)
     data = data[cols].stack().to_frame('value')
     data.index.names = ['Date', 'SKU', 'Result_Type', 'vars']
@@ -117,16 +119,16 @@ def plot_opportunities(data, costs):
 def analyze_opportunity1(data):
     # Analyze root cause of opportunity 1 defects (Defect_2 in NonA001 SKUs)
     data2 = data[(data.SKU != 'A001') & data.Result_Type.isin(['PASS', 'Defect_2'])].dropna()
-    x = data2.drop(columns=['Result_Type_Bin', 'Result_Type', 'Date', 'SKU', 'Week_Day'])
+    x = pandas.get_dummies(data2.drop(columns=['Result_Type_Bin', 'Result_Type', 'Date', 'SKU']))
     tree = sklearn.tree.DecisionTreeClassifier(min_samples_split=1000, min_samples_leaf=100,
-                                               min_impurity_split=0.1).fit(x, data2.Result_Type)
+                                               min_impurity_split=0.1).fit(x, data2.Result_Type.astype('object'))
     graph = sklearn.tree.export_graphviz(tree, feature_names=x.columns, class_names=tree.classes_, filled=True,
                                          rounded=True, proportion=True)
     graphviz.Source(graph).render(os.path.join('figures', 'opportunity1_tree'), format='png')
 
 
 def plot_opportunity1_partial_dependency_plot(data):
-    data2 = data[(data.Zone3Position == 6) & (data.SKU != 'A001') & data.Result_Type.isin(['PASS', 'Defect_2'])].copy()
+    data2 = data[(data.Zone3Position == '6') & (data.SKU != 'A001') & data.Result_Type.isin(['PASS', 'Defect_2'])].copy()
 
     data2['HasDefect'] = data2.Result_Type != 'PASS'
 
@@ -141,6 +143,31 @@ def plot_opportunity1_partial_dependency_plot(data):
     matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity1_partial_dependency.png'))
 
 
+def analyze_opportunity3(data):
+    # Analyze root cause of opportunity 3 defects (Defect_3 in NonA001 SKUs)
+    data2 = data[(data
+                  .SKU != 'A001') & data.Result_Type.isin(['PASS', 'Defect_3'])].dropna()
+    x = pandas.get_dummies(data2.drop(columns=['Result_Type_Bin', 'Result_Type', 'Date', 'SKU']))
+    tree = sklearn.tree.DecisionTreeClassifier(min_samples_split=10, min_samples_leaf=10,
+                                               min_impurity_split=0.065).fit(x, data2.Result_Type.astype('object'))
+    graph = sklearn.tree.export_graphviz(tree, feature_names=x.columns, class_names=tree.classes_, filled=True,
+                                         rounded=True, proportion=True)
+    graphviz.Source(graph).render(os.path.join('figures', 'opportunity3_tree'), format='png')
+
+
+def plot_opportunity3_partial_dependency_plot(data):
+    data2 = data[(data.Zone2Position == '1') & (data.SKU != 'A001') & data.Result_Type.isin(['PASS', 'Defect_3'])].copy()
+
+    data2['HasDefect'] = data2.Result_Type != 'PASS'
+    data2.dropna(subset=['HasDefect', 'Block_Position', 'Zone1_In_Zone3_Out_Dur'], inplace=True)
+
+
+    matplotlib.pyplot.figure()
+    ax=seaborn.lineplot('Zone1_In_Zone3_Out_Dur', 'HasDefect', hue=data2.Block_Position.astype('int64'), data=data2, palette='Set1')
+    ax.set_ylabel('Defect rate')
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity3_partial_dependency.png'))
+
 if __name__ == '__main__':
     data = prepare_data.get_prepared_data()
     costs = prepare_data.get_costs()
@@ -152,8 +179,6 @@ if __name__ == '__main__':
     # Association between SKU and categorical variables
     plot_cat_data_association(data, ['SKU', 'Result_Type_Bin'], 'SKU_vs_Result_Type_Bin')
     plot_cat_data_association(data, ['SKU', 'Result_Type'], 'SKU_vs_Result_Type')
-    plot_cat_data_association(data, ['SKU', 'Week_Day'], 'SKU_vs_Week_Day')
-    plot_cat_data_association(data, ['SKU', 'Is_Weekend'], 'SKU_vs_Is_Weekend')
     plot_cat_data_association(data, ['SKU', 'Block_Num'], 'SKU_vs_Block_Num')
     plot_cat_data_association(data, ['SKU', 'Block_Position'], 'SKU_vs_Block_Position')
     plot_cost_defect_association(data, costs)
@@ -162,6 +187,11 @@ if __name__ == '__main__':
     analyze_opportunity1(data)
     plot_zone_position_defect(data)
     plot_opportunity1_partial_dependency_plot(data)
+
+    analyze_opportunity3(data)
+    plot_opportunity3_partial_dependency_plot(data)
+
+
 
 
     # Correlation among numerical variables
@@ -204,4 +234,4 @@ if __name__ == '__main__':
     plot_correlation_among_features(data, ['Result_Type_Bin', 'Zone1_Dur', 'Zone2_Dur', 'Zone3_Dur', 'Zone1_Out_Zone2_In_Dur',
                                            'Zone1_Out_Zone3_In_Dur', 'Zone2_Out_Zone3_In_Dur',
                                            'Zone1_In_Zone3_Out_Dur', 'Zone1_In_Zone2_Out_Dur', 'Zone2_In_Zone3_Out_Dur', 'Total_Dur',
-                                           'Total_Zone123_Dur', 'AVG_Zone123_Dur'])
+                                           'Total_Zone123_Dur'])
