@@ -48,6 +48,21 @@ Defect 2 for non-A001 SKUs appear over-represented in products produced:
 Practically all of Defect 2 for non-A001 SKUs can be explained by min/max temperatures in Zone1
 for items produced in zone 3 position 6.
 
+# Opportunity 2, Defect 1 in A001 SKU
+![opportunity2_tree.png](figures/opportunity2_tree.png)
+
+Defect 1 for A001 appear over-represented in products produced:
+- In Zone3 Area Bottom Right
+- With large temperature ranges in Zone1
+- Why the strange interaction between position in zone3 and temperatures in zone1??
+
+# Partial dependency plot for Zone1 temperature ranges for A001 SKU in Zone3 Area Bottom right
+
+![opportunity2_partial_dependency.png](figures/opportunity2_partial_dependency.png)
+
+Practically all of Defect 1 for A001 SKUs can be explained by the temperature range in Zone1 for
+items produced in Zone 3 Area Bottom Right.
+
 # Opportunity 3, Defect_3 across non-A001 SKUs
 ![opportunity3_tree.png](figures/opportunity3_tree.png)
 

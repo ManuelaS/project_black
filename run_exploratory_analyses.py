@@ -143,6 +143,29 @@ def plot_opportunity1_partial_dependency_plot(data):
     matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity1_partial_dependency.png'))
 
 
+def analyze_opportunity2(data):
+    # Analyze root cause of opportunity 2 defects (Defect_1 in A001 SKUs)
+    data2 = data[(data.SKU == 'A001') & data.Result_Type.isin(['PASS', 'Defect_1'])].dropna()
+    x = pandas.get_dummies(data2.drop(columns=['Result_Type_Bin', 'Result_Type', 'Date', 'SKU']))
+    tree = sklearn.tree.DecisionTreeClassifier(min_samples_split=1000, min_samples_leaf=100,
+                                               min_impurity_split=0.1).fit(x, data2.Result_Type.astype('object'))
+    graph = sklearn.tree.export_graphviz(tree, feature_names=x.columns, class_names=tree.classes_, filled=True,
+                                         rounded=True, proportion=False)
+    graphviz.Source(graph).render(os.path.join('figures', 'opportunity2_tree'), format='png')
+
+
+def plot_opportunity2_partial_dependency_plot(data):
+    data2 = data[(data.SKU == 'A001') & data.Result_Type.isin(['PASS', 'Defect_1'])].copy()
+
+    data2['HasDefect'] = data2.Result_Type != 'PASS'
+    data2['Zone1_Temp_Range'] = data2.Zone1_Temp_Range.round(0)
+
+    matplotlib.pyplot.figure()
+    seaborn.lineplot('Zone1_Temp_Range', 'HasDefect', data=data2)
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity2_partial_dependency.png'))
+
+
 def analyze_opportunity3(data):
     # Analyze root cause of opportunity 3 defects (Defect_3 in NonA001 SKUs)
     data2 = data[(data

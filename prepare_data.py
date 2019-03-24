@@ -124,6 +124,11 @@ def impute_data_zone3(data):
     print('{:.2f}% fraction of samples have positional information for Zone3 after imputation.'.format(
         100 * data.Zone3Position.notna().mean()))
 
+    # Recreate other positional variables based on Zone3Position
+    data['Zone3_Area'] = data.Zone3Position.map(
+        {'1': 'Top Left', '2': 'Top Left', '3': 'Bottom Right',
+         '4': 'Top Left', '5': 'Bottom Right', '6': 'Bottom Right'}).astype('category')
+
 
 def impute_data_duration(data):
     # Drop AVG_Zone123_Dur as it is redundant with Total_Zone123_Dur and the 2 columns are filled in the same cases
