@@ -1,14 +1,15 @@
 import os
 
+import graphviz
 import matplotlib.pyplot
 import numpy
 import pandas
 import seaborn
-import statsmodels.graphics.mosaicplot
 import sklearn.tree
-import graphviz
+import statsmodels.graphics.mosaicplot
 
 import prepare_data
+import zone_path_sankey
 
 pandas.set_option('display.max_columns', 10)
 pandas.set_option('display.width', 150)
@@ -230,11 +231,10 @@ if __name__ == '__main__':
     analyze_opportunity1(data)
     plot_zone_position_defect(data)
     plot_opportunity1_partial_dependency_plot(data)
+    zone_path_sankey.make_sankey(data[data.Result_Type.isin(['PASS', 'Defect_2'])])
 
     analyze_opportunity3(data)
     plot_opportunity3_partial_dependency_plot(data)
-
-
 
 
     # Correlation among numerical variables
