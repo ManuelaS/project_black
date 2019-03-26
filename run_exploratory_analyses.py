@@ -120,11 +120,21 @@ def analyze_opportunity1(data):
     # Analyze root cause of opportunity 1 defects (Defect_2 in NonA001 SKUs)
     data2 = data[(data.SKU != 'A001') & data.Result_Type.isin(['PASS', 'Defect_2'])].dropna()
     x = pandas.get_dummies(data2.drop(columns=['Result_Type_Bin', 'Result_Type', 'Date', 'SKU']))
-    tree = sklearn.tree.DecisionTreeClassifier(min_samples_split=1000, min_samples_leaf=100,
+    tree = sklearn.tree.DecisionTreeClassifier(min_samples_split=1000, min_samples_leaf=500,
                                                min_impurity_split=0.1).fit(x, data2.Result_Type.astype('object'))
-    graph = sklearn.tree.export_graphviz(tree, feature_names=x.columns, class_names=tree.classes_, filled=True,
-                                         rounded=True, proportion=True)
+    graph = sklearn.tree.export_graphviz(tree,
+                                         impurity=False,
+                                         precision=2,
+                                         special_characters=True,
+                                         max_depth=3,
+                                         feature_names=x.columns,
+                                         class_names=tree.classes_,
+                                         filled=True,
+                                         rounded=True,
+                                         proportion=True)
     graphviz.Source(graph).render(os.path.join('figures', 'opportunity1_tree'), format='png')
+    graphviz.Source(graph).render(os.path.join('figures', 'opportunity1_tree'), format='pdf')
+
 
 
 def plot_opportunity1_partial_dependency_plot(data):
@@ -132,13 +142,15 @@ def plot_opportunity1_partial_dependency_plot(data):
 
     data2['HasDefect'] = data2.Result_Type != 'PASS'
 
-    data3 = data2.groupby([pandas.cut(data2.Zone1_Temp_Min, range(11, 26), precision=0),
-                           pandas.cut(data2.Zone1_Temp_Max, range(20, 36), precision=0)]). \
+    data3 = data2.groupby([pandas.cut(data2.Zone1_Temp_Max, range(20, 36), precision=0),
+                           pandas.cut(data2.Zone1_Temp_Min, range(11, 26), precision=0)]). \
         HasDefect.mean().unstack()
     data3.sort_index(axis=1, inplace=True)
 
     matplotlib.pyplot.figure()
-    seaborn.heatmap(data3, cmap='RdYlBu_r', cbar_kws={'label': 'Defect 2 incidence rate'})
+    cmap = matplotlib.colors.LinearSegmentedColormap.from_list('pass_to_defect2', ['#637254', '#a7cee2'])
+    ax = seaborn.heatmap(data3, cmap=cmap, cbar_kws={'label': 'Defect 2 incidence rate'})
+    ax.invert_yaxis()
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity1_partial_dependency.png'))
 
