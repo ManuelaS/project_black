@@ -141,18 +141,26 @@ def plot_opportunity1_partial_dependency_plot(data):
     data2 = data[(data.Zone3Position == '6') & (data.SKU != 'A001') & data.Result_Type.isin(['PASS', 'Defect_2'])].copy()
 
     data2['HasDefect'] = data2.Result_Type != 'PASS'
-
-    data3 = data2.groupby([pandas.cut(data2.Zone1_Temp_Max, range(20, 36), precision=0),
-                           pandas.cut(data2.Zone1_Temp_Min, range(11, 26), precision=0)]). \
-        HasDefect.mean().unstack()
-    data3.sort_index(axis=1, inplace=True)
+    groups = data2.groupby([pandas.cut(data2.Zone1_Humidity_Min, range(16, 53), precision=0),
+                            pandas.cut(data2.Zone1_Temp_Range, range(0, 23), precision=0)])
+    data3 = groups.HasDefect.mean().unstack()
+    counts = groups.size().unstack(fill_value=0).values # Count number of samples for each group
 
     matplotlib.pyplot.figure()
-    cmap = matplotlib.colors.LinearSegmentedColormap.from_list('pass_to_defect2', ['#637254', '#a7cee2'])
+    cmap = matplotlib.colors.LinearSegmentedColormap.from_list('red_blue', ['#e31a1c', '#1f78b4'])
     ax = seaborn.heatmap(data3, cmap=cmap, cbar_kws={'label': 'Defect 2 incidence rate'})
     ax.invert_yaxis()
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity1_partial_dependency.png'))
+    matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity1_partial_dependency.pdf'))
+
+    quad_mesh = ax.findobj(matplotlib.collections.QuadMesh)[0]
+    colors = quad_mesh.get_facecolors()
+    alpha = counts / counts.max().max()
+    colors[:, -1] = alpha.reshape(-1)
+    quad_mesh.set_facecolors(colors)
+    matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity1_partial_dependency_alpha.png'))
+    matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity1_partial_dependency_alpha.pdf'))
 
 
 def analyze_opportunity2(data):
