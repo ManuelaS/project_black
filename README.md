@@ -24,7 +24,7 @@ Our team developed an analysis pipeline to:
 
 We identified 4 types of manufacturing defects. By accounting the number of defective products per type and their price,
 we ranked financial opportunities by potential savings. The focus of my analysis was on "opportunity 1" (Defect 2 in
-non-A001 SKU products). Complete analysis is included in [analysis summary](analysis_summary.md).
+non-A001 SKU products). Complete analysis is included in [analysis summary](https://github.com/ManuelaS/project_black/blob/master/summary.md).
 
 ![Financial opportunities.](figures/opportunities.png)
 
