@@ -103,6 +103,7 @@ def plot_zone_position_defect(data):
     data.groupby(['Zone2Position', 'Result_Type']).size().unstack().plot(kind='bar', stacked=True, ax=ax[1])
     data.groupby(['Zone3Position', 'Result_Type']).size().unstack().plot(kind='bar', stacked=True, ax=ax[2])
     matplotlib.pyplot.savefig(os.path.join('figures', 'defects_by_position.png'))
+    matplotlib.pyplot.savefig(os.path.join('figures', 'defects_by_position.pdf'))
 
 
 def plot_opportunities(data, costs):
@@ -170,9 +171,18 @@ def analyze_opportunity2(data):
     x = pandas.get_dummies(data2.drop(columns=['Result_Type_Bin', 'Result_Type', 'Date', 'SKU']))
     tree = sklearn.tree.DecisionTreeClassifier(min_samples_split=1000, min_samples_leaf=100,
                                                min_impurity_split=0.1).fit(x, data2.Result_Type.astype('object'))
-    graph = sklearn.tree.export_graphviz(tree, feature_names=x.columns, class_names=tree.classes_, filled=True,
-                                         rounded=True, proportion=False)
+    graph = sklearn.tree.export_graphviz(tree,
+                                         impurity=False,
+                                         precision=2,
+                                         special_characters=True,
+                                         max_depth=3,
+                                         feature_names=x.columns,
+                                         class_names=tree.classes_,
+                                         filled=True,
+                                         rounded=True,
+                                         proportion=True)
     graphviz.Source(graph).render(os.path.join('figures', 'opportunity2_tree'), format='png')
+    graphviz.Source(graph).render(os.path.join('figures', 'opportunity2_tree'), format='pdf')
 
 
 def plot_opportunity2_partial_dependency_plot(data):
@@ -185,6 +195,7 @@ def plot_opportunity2_partial_dependency_plot(data):
     seaborn.lineplot('Zone1_Temp_Range', 'HasDefect', data=data2)
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity2_partial_dependency.png'))
+    matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity2_partial_dependency.pdf'))
 
 
 def analyze_opportunity3(data):
@@ -194,9 +205,18 @@ def analyze_opportunity3(data):
     x = pandas.get_dummies(data2.drop(columns=['Result_Type_Bin', 'Result_Type', 'Date', 'SKU']))
     tree = sklearn.tree.DecisionTreeClassifier(min_samples_split=10, min_samples_leaf=10,
                                                min_impurity_split=0.065).fit(x, data2.Result_Type.astype('object'))
-    graph = sklearn.tree.export_graphviz(tree, feature_names=x.columns, class_names=tree.classes_, filled=True,
-                                         rounded=True, proportion=True)
+    graph = sklearn.tree.export_graphviz(tree,
+                                         impurity=False,
+                                         precision=2,
+                                         special_characters=True,
+                                         max_depth=3,
+                                         feature_names=x.columns,
+                                         class_names=tree.classes_,
+                                         filled=True,
+                                         rounded=True,
+                                         proportion=True)
     graphviz.Source(graph).render(os.path.join('figures', 'opportunity3_tree'), format='png')
+    graphviz.Source(graph).render(os.path.join('figures', 'opportunity3_tree'), format='pdf')
 
 
 def plot_opportunity3_partial_dependency_plot(data):
@@ -211,6 +231,8 @@ def plot_opportunity3_partial_dependency_plot(data):
     ax.set_ylabel('Defect rate')
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity3_partial_dependency.png'))
+    matplotlib.pyplot.savefig(os.path.join('figures', 'opportunity3_partial_dependency.pdf'))
+
 
 if __name__ == '__main__':
     data = prepare_data.get_prepared_data()
@@ -232,6 +254,9 @@ if __name__ == '__main__':
     plot_zone_position_defect(data)
     plot_opportunity1_partial_dependency_plot(data)
     zone_path_sankey.make_sankey(data[(data.SKU != 'A001') & (data.Result_Type.isin(['Defect_2']))])
+
+    analyze_opportunity2(data)
+    plot_opportunity2_partial_dependency_plot(data)
 
     analyze_opportunity3(data)
     plot_opportunity3_partial_dependency_plot(data)
